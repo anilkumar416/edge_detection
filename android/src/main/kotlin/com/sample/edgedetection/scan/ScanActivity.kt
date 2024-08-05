@@ -46,6 +46,9 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
             Log.i("OpenCV", "OpenCV loaded Successfully!");
         }
 
+         // Hide app bar
+        supportActionBar?.hide()
+
         findViewById<View>(R.id.shut).setOnClickListener {
             if (mPresenter.canShut) {
                 mPresenter.shut()
