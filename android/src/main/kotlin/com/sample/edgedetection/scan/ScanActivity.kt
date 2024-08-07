@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.exifinterface.media.ExifInterface
@@ -41,12 +42,11 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
         if (!OpenCVLoader.initDebug()) {
             Log.i(TAG, "loading opencv error, exit")
             finish()
-        }
-        else {
-            Log.i("OpenCV", "OpenCV loaded Successfully!");
+        } else {
+            Log.i("OpenCV", "OpenCV loaded Successfully!")
         }
 
-         // Hide app bar
+        // Hide app bar
         supportActionBar?.hide()
 
         findViewById<View>(R.id.shut).setOnClickListener {
@@ -55,11 +55,11 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
             }
         }
 
-        // to hide the flashLight button from  SDK versions which we do not handle the permission for!
-        findViewById<View>(R.id.flash).visibility = if
-                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU && baseContext.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH))
-            View.VISIBLE else
-                View.GONE
+        // Hide the flashLight button for SDK versions which do not handle the permission
+        findViewById<View>(R.id.flash).visibility = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+            && Build.VERSION.SDK_INT <= Build.VERSION_CODES.TIRAMISU
+            && baseContext.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)
+        ) View.VISIBLE else View.GONE
 
         findViewById<View>(R.id.flash).setOnClickListener {
             mPresenter.toggleFlash()
@@ -67,28 +67,28 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
 
         val initialBundle = intent.getBundleExtra(EdgeDetectionHandler.INITIAL_BUNDLE) as Bundle
 
-        if(!initialBundle.containsKey(EdgeDetectionHandler.FROM_GALLERY)){
+        if (!initialBundle.containsKey(EdgeDetectionHandler.FROM_GALLERY)) {
             this.title = initialBundle.getString(EdgeDetectionHandler.SCAN_TITLE, "") as String
         }
 
         findViewById<View>(R.id.gallery).visibility =
-                if (initialBundle.getBoolean(EdgeDetectionHandler.CAN_USE_GALLERY, true))
-                    View.VISIBLE
-                else View.GONE
+            if (initialBundle.getBoolean(EdgeDetectionHandler.CAN_USE_GALLERY, true))
+                View.VISIBLE else View.GONE
 
         findViewById<View>(R.id.gallery).setOnClickListener {
             pickupFromGallery()
         }
 
-        if (initialBundle.containsKey(EdgeDetectionHandler.FROM_GALLERY) && initialBundle.getBoolean(EdgeDetectionHandler.FROM_GALLERY,false))
-        {
+        if (initialBundle.containsKey(EdgeDetectionHandler.FROM_GALLERY)
+            && initialBundle.getBoolean(EdgeDetectionHandler.FROM_GALLERY, false)
+        ) {
             pickupFromGallery()
         }
     }
 
     private fun pickupFromGallery() {
         mPresenter.stop()
-        val gallery = Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply{type="image/*"}
+        val gallery = Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply { type = "image/*" }
         ActivityCompat.startActivityForResult(this, gallery, 1, null)
     }
 
@@ -137,11 +137,10 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     onImageSelected(uri)
                 }
-            }else if(resultCode == Activity.RESULT_CANCELED){
+            } else if (resultCode == Activity.RESULT_CANCELED) {
                 mPresenter.start()
-            }
-            else {
-                if (intent.hasExtra(EdgeDetectionHandler.FROM_GALLERY) && intent.getBooleanExtra(EdgeDetectionHandler.FROM_GALLERY,false))
+            } else {
+                if (intent.hasExtra(EdgeDetectionHandler.FROM_GALLERY) && intent.getBooleanExtra(EdgeDetectionHandler.FROM_GALLERY, false))
                     finish()
             }
         }
@@ -163,8 +162,8 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
             val exif = ExifInterface(iStream)
             var rotation = -1
             val orientation: Int = exif.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_UNDEFINED
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_UNDEFINED
             )
             when (orientation) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> rotation = Core.ROTATE_90_CLOCKWISE
@@ -209,7 +208,6 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
             setResult(ERROR_CODE, intent)
             finish()
         }
-
     }
 
     @Throws(IOException::class)
@@ -222,5 +220,9 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
             byteBuffer.write(buffer, 0, len)
         }
         return byteBuffer.toByteArray()
+    }
+
+    override fun onBackPressed() {
+        Toast.makeText(this, "You cannot go back'", Toast.LENGTH_SHORT).show()
     }
 }
